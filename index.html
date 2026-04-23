@@ -3,182 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>易错字全能竞技场</title>
+    <title>易错字全能挑战 - 完整版</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <style>
         :root { --main: #6BCB77; --wrong: #FF6B6B; --bg: #F0F9FF; --accent: #FFD93D; }
         body { font-family: "PingFang SC", sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #app { width: 92%; max-width: 600px; background: white; border-radius: 30px; padding: 20px; box-shadow: 0 12px 0 #B3E5FC; border: 4px solid #03A9F4; text-align: center; position: relative; height: 85vh; display: flex; flex-direction: column; }
-        .btn { background: var(--main); color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 18px; cursor: pointer; box-shadow: 0 5px 0 #4da658; font-weight: bold; margin: 10px; }
-        .sentence { font-size: 32px; margin: 15px 0; font-weight: bold; min-height: 60px; display: flex; justify-content: center; align-items: center; }
+        #app { width: 92%; max-width: 600px; background: white; border-radius: 30px; padding: 15px; box-shadow: 0 10px 0 #B3E5FC; border: 4px solid #03A9F4; text-align: center; height: 92vh; display: flex; flex-direction: column; }
+        .btn { background: var(--main); color: white; border: none; padding: 12px 25px; border-radius: 50px; font-size: 17px; cursor: pointer; box-shadow: 0 5px 0 #4da658; font-weight: bold; margin: 5px; }
+        .sentence { font-size: 22px; margin: 10px 0; font-weight: bold; min-height: 60px; display: flex; justify-content: center; align-items: center; line-height: 1.4; color: #2C3E50; }
         .blank { color: var(--wrong); border-bottom: 4px solid var(--wrong); padding: 0 10px; }
-        .error-text { color: var(--wrong); text-decoration: line-through; background: #FFEBEE; padding: 5px 10px; border-radius: 8px; }
-        .correct-text { color: var(--main); font-size: 42px; animation: pop 0.3s ease; }
-        @keyframes pop { 0% {transform: scale(0.8);} 100% {transform: scale(1.1);} }
-        .definition { font-size: 15px; background: #FFF9C4; padding: 12px; border-radius: 12px; text-align: left; margin-bottom: 15px; line-height: 1.5; border-left: 5px solid #FFD54F; }
-        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .opt-card { background: #FFF; border: 3px solid #E1F5FE; border-radius: 20px; font-size: 45px; padding: 15px; cursor: pointer; box-shadow: 0 6px 0 #E1F5FE; touch-action: manipulation; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .opt-card { background: #FFF; border: 3px solid #E1F5FE; border-radius: 15px; font-size: 24px; padding: 12px; cursor: pointer; box-shadow: 0 5px 0 #E1F5FE; touch-action: manipulation; display: flex; align-items: center; justify-content: center; min-height: 55px; }
+        #writer-container { display: none; flex-direction: column; align-items: center; justify-content: center; background: #FFF; border-radius: 20px; padding: 10px; border: 2px dashed #03A9F4; margin: 5px 0; }
+        #grid { width: 180px; height: 180px; background: url('https://hanziwriter.org/images/grid.png'); background-size: contain; border: 2px solid #333; }
         .hidden { display: none; }
-        /* 终极挑战特有样式：倒计时条 */
-        #timer-container { width: 100%; height: 6px; background: #EEE; border-radius: 3px; margin-top: 10px; display: none; }
-        #timer-bar { width: 100%; height: 100%; background: #FF9800; transition: width 0.1s linear; }
-        .ultimate-mode { border-color: #E91E63 !important; box-shadow: 0 12px 0 #F8BBD0 !important; }
+        .phase-tag { font-size: 13px; color: white; font-weight: bold; margin-bottom: 5px; background: #03A9F4; padding: 4px 12px; border-radius: 20px; display: inline-block; }
+        .progress-container { width: 100%; height: 8px; background: #EEE; border-radius: 10px; margin: 5px 0; }
+        #progress-fill { height: 100%; background: var(--main); width: 0%; border-radius: 10px; transition: 0.3s; }
+        #level-buttons { overflow-y: auto; flex: 1; display: flex; flex-direction: column; align-items: center; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="screen-login">
-        <h1 style="color:#03A9F4">✍️ 易错字大闯关</h1>
+        <h1 style="color:#03A9F4">✍️ 易错字全能竞技场</h1>
         <p>请输入学生姓名：</p>
         <input type="text" id="user-name" style="padding:15px; border-radius:10px; border:2px solid #DDD; width:80%; text-align:center; font-size:18px;">
-        <br><br>
-        <button class="btn" onclick="goToMenu()">开始冒险</button>
+        <br><br><button class="btn" onclick="goToMenu()">开启冒险</button>
     </div>
 
     <div id="screen-menu" class="hidden">
         <h2 id="welcome-text"></h2>
-        <div id="level-buttons" style="overflow-y: auto; flex: 1;"></div>
+        <div id="level-buttons"></div>
     </div>
 
     <div id="screen-game" class="hidden">
         <div style="display:flex; justify-content: space-between; align-items: center;">
-            <button onclick="stopTimer(); location.reload()" style="background:none; border:none; color:#03A9F4; font-size:16px;">🏠 首页</button>
+            <button onclick="location.reload()" style="background:none; border:none; color:#03A9F4; font-size:14px;">🏠 首页</button>
             <span id="level-title" style="font-weight:bold; font-size:14px;"></span>
             <span id="stat-count" style="font-size:12px;"></span>
         </div>
-        <div id="timer-container"><div id="timer-bar"></div></div>
-        <div style="width: 100%; height: 10px; background: #EEE; border-radius: 10px; margin: 10px 0;">
-            <div id="progress-fill" style="height:100%; background:var(--main); width:0%; border-radius:10px; transition:0.3s;"></div>
-        </div>
-        
+        <div class="progress-container"><div id="progress-fill"></div></div>
         <div id="game-content">
+            <div id="phase-tag" class="phase-tag">阶段一：字形辨析</div>
+            <div id="writer-container">
+                <p style="font-size:14px; margin:0 0 5px 0;">请在格内书写：<b id="write-target" style="color:var(--main); font-size:20px;"></b></p>
+                <div id="grid"></div>
+                <button class="btn" style="padding:5px 15px; font-size:14px;" onclick="startQuiz()">开始书写挑战</button>
+            </div>
             <div id="display-area">
-                <div class="pinyin" id="p-text" style="color:#888; margin-bottom:5px;"></div>
+                <div id="d-text" style="font-size:14px; background:#FFF9C4; padding:10px; border-radius:12px; text-align:left; border-left:5px solid #FFD54F; margin-bottom:10px;"></div>
                 <div class="sentence" id="s-text"></div>
-                <div class="definition" id="d-text"></div>
             </div>
             <div class="options" id="opt-area"></div>
         </div>
-        <div id="feedback"></div>
+        <div id="feedback" style="margin-top:10px; min-height:40px; font-weight:bold; font-size:16px;"></div>
     </div>
 
     <div id="screen-result" class="hidden">
-        <div style="background:#E8F5E9; padding:30px; border-radius:25px; border:3px dashed var(--main);">
-            <h2 id="result-title" style="color:var(--main)">🎉 闯关成功！</h2>
+        <div style="background:#E8F5E9; padding:25px; border-radius:25px; border:2px dashed var(--main);">
+            <h2>🎊 挑战成功！</h2>
             <p style="font-size:20px;"><span id="res-name"></span> 同学</p>
-            <p>完成关卡：<span id="res-level"></span></p>
-            <p>掌握率：<b id="res-acc" style="font-size:30px; color:var(--main)"></b></p>
-            <p id="res-time" style="font-size:12px; color:#999;"></p>
+            <p id="res-level"></p>
+            <p>综合准确率：<b id="res-acc" style="font-size:30px; color:var(--main)"></b></p>
+            <button class="btn" onclick="location.reload()">返回主页</button>
         </div>
-        <button class="btn" onclick="location.reload()">再战一回</button>
     </div>
 </div>
 
 <script>
-    let userName = "";
-    let score = 0, totalTried = 0, activePool = [], currentQ = null, currentLevelObj = null;
-    let timerInterval = null;
-    let timeLeft = 50; // 5秒，每100ms减1
+    let userName = "", score = 0, totalTried = 0, activePool = [], currentQ = null, currentPhase = 1, writer = null, currentLevelData = [];
 
     const database = [
-        { name: "第一关：森林冒险", type: "select", data: [
-            {w:"径直", t:"径", n:"经", p:"jìng zhí", d:"意思是直接向某处前进，不绕路。", h:"双人旁代表路。"},
-            {w:"野兔", t:"兔", n:"免", p:"yě tù", d:"一种长耳朵、跑得极快的动物。", h:"点是尾巴。"},
-            {w:"想到", t:"想", n:"相", p:"xiǎng dào", d:"脑海中冒出了念头。", h:"思考需要心。"},
-            {w:"窒息", t:"窒", n:"室", p:"zhì xī", d:"气管受阻，呼吸极其困难。", h:"下边是‘至’。"},
-            {w:"冷静", t:"静", n:"净", p:"lěng jìng", d:"遇到突发情况不慌张。", h:"静是平稳。"},
-            {w:"奈何", t:"奈", n:"内", p:"nài hé", d:"表示没有办法，无计可施。", h:"奈上边是大。"},
-            {w:"马厩", t:"厩", n:"既", p:"mǎ jiù", d:"供牲畜居住的房子。", h:"厂字头代表建筑。"},
-            {w:"呼吸", t:"呼", n:"乎", p:"hū xī", d:"气流进出肺部的过程。", h:"用口呼。"},
-            {w:"始终", t:"终", n:"冬", p:"shǐ zhōng", d:"从最开始到最后。", h:"末端是丝。"},
-            {w:"见状", t:"状", n:"壮", p:"jiàn zhuàng", d:"看到当时发生的情形。", h:"状是样子。"},
-            {w:"紧张", t:"紧", n:"斤", p:"jǐn zhāng", d:"精神不安或节奏极快。", h:"下边是丝。"},
-            {w:"自己", t:"己", n:"已", p:"zì jǐ", d:"指代本人。", h:"己不开口。"},
-            {w:"砸死", t:"砸", n:"扎", p:"zá sǐ", d:"被重物撞击。", h:"石部。"}
+        { name: "第一关：基础辨析", data: [
+            {w:"径直", t:"径", n:"经", d:"指不绕道，直接奔向目标。", h:"双人旁代表路。", q2:"他下课后( )走向图书馆。", o2:["径直", "经过"]},
+            {w:"野兔", t:"兔", n:"免", d:"野生动物。", h:"点是尾巴。", q2:"草丛里钻出一只( )。", o2:["野兔", "野马"]},
+            {w:"想到", t:"想", n:"相", d:"脑中产生念头。", h:"思考需要心。", q2:"我忽然( )一个绝妙的办法。", o2:["想到", "看到"]},
+            {w:"窒息", t:"窒", n:"室", d:"呼吸受阻，憋气困难。", h:"下边是‘至’。", q2:"浓烟常使人感到( )。", o2:["窒息", "难受"]},
+            {w:"冷静", t:"静", n:"净", d:"沉着不慌张。", h:"静是平稳。", q2:"面对火灾，他表现得十分( )。", o2:["冷静", "冷淡"]},
+            {w:"奈何", t:"奈", n:"内", d:"表示没有办法。", h:"上边是大。", q2:"大家拿他无可( )。", o2:["奈何", "奈气"]},
+            {w:"马厩", t:"厩", n:"既", d:"养马的房舍。", h:"厂字头。", q2:"伯乐走进( )去喂马。", o2:["马厩", "马鞍"]},
+            {w:"呼吸", t:"呼", n:"乎", d:"进出肺部的气流。", h:"口字旁。", q2:"来到森林里( )新鲜空气。", o2:["呼吸", "呼唤"]},
+            {w:"始终", t:"终", n:"冬", d:"从头到尾。", h:"末端是丝。", q2:"他( )保持着勤奋。", o2:["始终", "终点"]},
+            {w:"见状", t:"状", n:"壮", d:"看到情形。", h:"状是样子。", q2:"他( )立刻去搀扶老人。", o2:["见状", "见解"]},
+            {w:"紧张", t:"紧", n:"斤", d:"精神不安。", h:"丝部。", q2:"演讲时他感到很( )。", o2:["紧张", "紧急"]},
+            {w:"自己", t:"己", n:"已", d:"指本人。", h:"己不开口。", q2:"( )的事情( )做。", o2:["自己", "本人"]},
+            {w:"砸死", t:"砸", n:"扎", d:"重物撞击。", h:"石部。", q2:"滚石险些( )路过的行人。", o2:["砸到", "扎到"]}
         ]},
-        { name: "第二关：深海探秘", type: "select", data: [
-            {w:"体力", t:"体", n:"休", p:"tǐ lì", d:"身体里能够负担的力量。", h:"身体的体。"},
-            {w:"鼻子", t:"鼻", n:"自", p:"bí zi", d:"脸部呼吸器官。", h:"鼻下有田。"},
-            {w:"笑道", t:"笑", n:"效", p:"xiào dào", d:"带着喜悦的表情说话。", h:"竹字头。"},
-            {w:"找到", t:"找", n:"我", p:"zhǎo dào", d:"寻觅到了某件物品。", h:"找用手。"},
-            {w:"零星", t:"零", n:"灵", p:"líng xīng", d:"数量稀少且不集中。", h:"雨字头。"},
-            {w:"咀嚼", t:"咀", n:"阻", p:"jǔ jué", d:"细细磨碎，反复体会。", h:"用口。"},
-            {w:"殊不知", t:"殊", n:"珠", p:"shū bù zhī", d:"竟然没想到，竟不知。", h:"殊是不同。"},
-            {w:"已然", t:"已", n:"己", p:"yǐ rán", d:"表示事情成了过去。", h:"已半开口。"},
-            {w:"轮廓", t:"廓", n:"廊", p:"lún kuò", d:"物体最外缘的线条。", h:"内是郭。"},
-            {w:"紧迫", t:"迫", n:"白", p:"jǐn pò", d:"时间非常紧急。", h:"走之底。"},
-            {w:"移动", t:"移", n:"多", p:"yí dòng", d:"挪动位置。", h:"禾苗移。"},
-            {w:"吞噬", t:"吞", n:"口", p:"tūn shì", d:"大口吃掉、并吞。", h:"用口。"},
-            {w:"跌倒", t:"跌", n:"失", p:"diē dǎo", d:"摔下，落下。", h:"用足。"}
+        { name: "第二关：形近纠错", data: [
+            {w:"体力", t:"体", n:"休", d:"身体力量。", h:"身体的体。", q2:"跑步是对( )的考验。", o2:["体力", "能力"]},
+            {w:"鼻子", t:"鼻", n:"自", d:"嗅觉器官。", h:"鼻下有田。", q2:"大象有长长的( )。", o2:["鼻子", "自子"]},
+            {w:"笑道", t:"笑", n:"效", d:"喜悦说话。", h:"竹字头。", q2:"妈妈微( )：‘你真棒！’", o2:["笑道", "说道"]},
+            {w:"找到", t:"找", n:"我", d:"寻觅到。", h:"找用手。", q2:"终于( )了那张照片。", o2:["找到", "得到"]},
+            {w:"零星", t:"零", n:"灵", d:"稀少分散。", h:"雨字头。", q2:"夜空闪烁着( )的星。", o2:["零星", "零碎"]},
+            {w:"咀嚼", t:"咀", n:"阻", d:"细品。", h:"用口。", q2:"散文值得反复( )。", o2:["咀嚼", "阅读"]},
+            {w:"殊不知", t:"殊", n:"珠", d:"竟不知。", h:"殊是不同。", q2:"他以为会赢，( )对手更强。", o2:["殊不知", "不清楚"]},
+            {w:"已然", t:"已", n:"己", d:"事实已形成。", h:"已半开口。", q2:"事( )至此，后悔无用。", o2:["已然", "已经"]},
+            {w:"轮廓", t:"廓", n:"廊", d:"外缘线条。", h:"内是郭。", q2:"远山的( )格外柔和。", o2:["轮廓", "走廊"]},
+            {w:"紧迫", t:"迫", n:"白", d:"非常紧急。", h:"走之底。", q2:"时间非常( )。", o2:["紧迫", "紧张"]},
+            {w:"移动", t:"移", n:"多", d:"挪动位置。", h:"禾苗移。", q2:"请将花向左( )一下。", o2:["移动", "多样"]},
+            {w:"吞噬", t:"吞", n:"口", d:"并吞。", h:"用口。", q2:"洪水( )了整个村庄。", o2:["吞噬", "吞吐"]},
+            {w:"跌倒", t:"跌", n:"失", d:"摔下。", h:"用足。", q2:"在哪儿( )在哪儿爬起。", o2:["跌倒", "失掉"]}
         ]},
-        { name: "第三关：沙漠寻宝", type: "fix", data: [
-            {w:"屠杀", t:"屠", n:"署", d:"宰杀牲畜或杀害。", h:"尸字头。"},
-            {w:"发楞", t:"楞", n:"棱", d:"形容人失神、发呆的样子。", h:"木字旁的。"},
-            {w:"不敢", t:"敢", n:"取", d:"没有胆量去做某事。", h:"右边是反文。"},
-            {w:"寡不敌众", t:"寡", n:"官", d:"形容人少抵挡不住人多。", h:"原意是少。"},
-            {w:"散发", t:"散", n:"放", d:"向四周发出、分发。", h:"左上是共。"},
-            {w:"瞬间", t:"瞬", n:"顺", d:"极短的时间，眨眼之间。", h:"眨眼用目。"},
-            {w:"施展", t:"施", n:"方", d:"没有任何办法可用了。", h:"方字旁。"},
-            {w:"彻底", t:"彻", n:"设", d:"完全、透彻。", h:"双人旁。"},
-            {w:"偷袭", t:"袭", n:"衣", d:"趁人不备进行攻击。", h:"下边是衣。"},
-            {w:"压低", t:"压", n:"庄", d:"向下加力。", h:"下有土。"},
-            {w:"稳定", t:"稳", n:"急", d:"安定不摇。", h:"禾字旁。"},
-            {w:"往返", t:"返", n:"反", d:"去和回。", h:"走之底。"},
-            {w:"原则", t:"则", n:"侧", d:"标准规矩。", h:"立刀旁。"}
+        { name: "第三关：结构强化", data: [
+            {w:"屠杀", t:"屠", n:"署", d:"宰杀牲畜。", h:"尸字头。", q2:"反对战争和( )。", o2:["屠杀", "署名"]},
+            {w:"发楞", t:"楞", n:"棱", d:"发呆。", h:"木字旁。", q2:"他听完消息直( )。", o2:["发楞", "棱角"]},
+            {w:"不敢", t:"敢", n:"取", d:"没胆量。", h:"反文旁。", q2:"他( )一个人走路。", o2:["不敢", "不能"]},
+            {w:"寡不敌众", t:"寡", n:"官", d:"人少抵挡不住人多。", h:"寡是少。", q2:"由于( )，最终失败。", o2:["寡不敌众", "官兵"]},
+            {w:"散发", t:"散", n:"放", d:"向四周发出。", h:"左上是共。", q2:"花朵( )出香味。", o2:["散发", "放飞"]},
+            {w:"瞬间", t:"瞬", n:"顺", d:"极短时间。", h:"目字旁。", q2:"流星( )消失。", o2:["瞬间", "顺利"]},
+            {w:"施展", t:"施", n:"方", d:"表现本领。", h:"方字旁。", q2:"( )才华。", o2:["施展", "方向"]},
+            {w:"彻底", t:"彻", n:"设", d:"完全。", h:"双人旁。", q2:"( )清理垃圾。", o2:["彻底", "设计"]},
+            {w:"偷袭", t:"袭", n:"衣", d:"不备攻击。", h:"下边是衣。", q2:"发动了( )计划。", o2:["偷袭", "偷衣"]},
+            {w:"压低", t:"压", n:"庄", d:"向下加力。", h:"下有土。", q2:"( )了嗓门说话。", o2:["压低", "庄重"]},
+            {w:"稳定", t:"稳", n:"急", d:"安定。", h:"禾字旁。", q2:"情绪已经( )了。", o2:["稳定", "急促"]},
+            {w:"往返", t:"返", n:"反", d:"去和回。", h:"走之底。", q2:"两地之间( )。", o2:["往返", "相反"]},
+            {w:"原则", t:"则", n:"侧", d:"标准。", h:"立刀旁。", q2:"坚持( )。", o2:["原则", "侧面"]}
         ]},
-        { name: "第四关：天空之城", type: "select", data: [
-            {w:"倒下", t:"倒", n:"到", p:"dǎo", d:"物体躺下。", h:"倒下是人。"},
-            {w:"似乎", t:"乎", n:"呼", p:"sì hū", d:"表示推测，仿佛。", h:"乎字。"},
-            {w:"漫长", t:"漫", n:"慢", p:"màn cháng", d:"水流出或无边际。", h:"三点水。"},
-            {w:"条件", t:"件", n:"牛", p:"tiáo jiàn", d:"因素或量词。", h:"单人旁。"},
-            {w:"有利", t:"利", n:"立", p:"yǒu lì", d:"有益处。", h:"立刀旁。"},
-            {w:"引导", t:"引", n:"弓", p:"yǐn dǎo", d:"拉开，带领。", h:"拉弓。"},
-            {w:"懒惰", t:"懒", n:"赖", p:"lǎn duò", d:"不爱劳动。", h:"心不想动。"},
-            {w:"狡猾", t:"猾", n:"滑", p:"jiǎo huá", d:"诡诈不可信。", h:"反犬旁。"},
-            {w:"绳子", t:"绳", n:"神", p:"shéng zi", d:"条状捆绑物。", h:"丝做的。"},
-            {w:"露水", t:"露", n:"路", p:"lù shuǐ", d:"靠近地面的水汽。", h:"雨字头。"},
-            {w:"逗留", t:"逗", n:"豆", p:"dòu liú", d:"暂时停留。", h:"走之底。"},
-            {w:"举手", t:"举", n:"句", p:"jǔ shǒu", d:"往上抬。", h:"举起。"},
-            {w:"洋洋", t:"洋", n:"样", p:"yáng yáng", d:"满足的样子。", h:"洋是水。"}
+        { name: "第四关：词义辨析", data: [
+            {w:"倒下", t:"倒", n:"到", d:"躺下。", h:"倒下是人。", q2:"老树轰然( )。", o2:["倒下", "到达"]},
+            {w:"似乎", t:"乎", n:"呼", d:"仿佛。", h:"乎字。", q2:"他( )并没有听到。", o2:["似乎", "似呼"]},
+            {w:"漫长", t:"漫", n:"慢", d:"无边际。", h:"三点水。", q2:"( )的等待。", o2:["漫长", "慢慢"]},
+            {w:"条件", t:"件", n:"牛", d:"因素。", h:"单人旁。", q2:"学习( )优越。", o2:["条件", "条牛"]},
+            {w:"有利", t:"利", n:"立", d:"有益。", h:"立刀旁。", q2:"读书非常( )。", o2:["有利", "有力"]},
+            {w:"引导", t:"引", n:"弓", d:"带领。", h:"拉弓。", q2:"( )步入殿堂。", o2:["引导", "弓箭"]},
+            {w:"懒惰", t:"懒", n:"赖", d:"不爱劳动。", h:"心不想动。", q2:"克服( )的毛病。", o2:["懒惰", "赖皮"]},
+            {w:"狡猾", t:"猾", n:"滑", d:"诡诈。", h:"反犬旁。", q2:"( )的狐狸。", o2:["狡猾", "光滑"]},
+            {w:"绳子", t:"绳", n:"神", d:"捆绑物。", h:"丝做的。", q2:"跳( )比赛。", o2:["绳子", "神气"]},
+            {w:"露水", t:"露", n:"路", d:"水汽。", h:"雨字头。", q2:"晶莹的( )。", o2:["露水", "马路"]},
+            {w:"逗留", t:"逗", n:"豆", d:"停留。", h:"走之底。", q2:"在北京( )三天。", o2:["逗留", "绿豆"]},
+            {w:"举手", t:"举", n:"句", d:"往上抬。", h:"举起。", q2:"有问题先( )。", o2:["举手", "句子"]},
+            {w:"洋洋", t:"洋", n:"样", d:"满足。", h:"洋是水。", q2:"得意( )。", o2:["洋洋", "样子"]}
         ]},
-        { name: "第五关：奇幻工厂", type: "audio", data: [
-            {w:"退后", t:"退", n:"腿", p:"tuì"}, {w:"剥皮", t:"剥", n:"博", p:"bāo"},
-            {w:"哼声", t:"哼", n:"享", p:"hēng"}, {w:"迹象", t:"迹", n:"记", p:"jì"},
-            {w:"汹涌", t:"汹", n:"凶", p:"xiōng"}, {w:"逼迫", t:"逼", n:"副", p:"bī"},
-            {w:"划破", t:"划", n:"画", p:"huá"}, {w:"爬行", t:"爬", n:"爪", p:"pá"},
-            {w:"成功", t:"成", n:"城", p:"chéng"}, {w:"盯着", t:"盯", n:"丁", p:"dīng"},
-            {w:"别在腰", t:"别", n:"列", p:"bié"}, {w:"晚餐", t:"餐", n:"参", p:"wǎn cān"},
-            {w:"疑惑", t:"惑", n:"或", p:"yí huò"}
+        { name: "第五关：语音挑战", data: [
+            {w:"退后", t:"退", n:"腿", d:"向后移。", h:"向后走。", q2:"向后( )一步。", o2:["退后", "大腿"]},
+            {w:"剥皮", t:"剥", n:"博", d:"去掉外壳。", h:"用刀剥。", q2:"给橘子( )。", o2:["剥皮", "博学"]},
+            {w:"哼声", t:"哼", n:"享", d:"鼻子声。", h:"用口。", q2:"( )了一声。", o2:["哼声", "享受"]},
+            {w:"迹象", t:"迹", n:"记", d:"印子。", h:"走之底。", q2:"生还的( )。", o2:["迹象", "记录"]},
+            {w:"汹涌", t:"汹", n:"凶", d:"翻腾。", h:"三点水。", q2:"波涛( )。", o2:["汹涌", "凶猛"]},
+            {w:"逼迫", t:"逼", n:"副", d:"强迫。", h:"走之底。", q2:"生活( )他。", o2:["逼迫", "一副"]},
+            {w:"划破", t:"划", n:"画", d:"弄出痕迹。", h:"立刀。", q2:"手指( )了。", o2:["划破", "画画"]},
+            {w:"爬行", t:"爬", n:"爪", d:"贴地挪。", h:"用爪。", q2:"缓慢( )。", o2:["爬行", "爪子"]},
+            {w:"成功", t:"成", n:"城", d:"完成。", h:"成。", q2:"获得( )。", o2:["成功", "城市"]},
+            {w:"盯着", t:"盯", n:"丁", d:"注视。", h:"用眼。", q2:"( )黑板看。", o2:["盯着", "园丁"]},
+            {w:"别在腰", t:"别", n:"列", d:"扣住。", h:"别。", q2:"( )在腰间。", o2:["别在腰", "排列"]},
+            {w:"晚餐", t:"餐", n:"参", d:"晚饭。", h:"食字底。", q2:"丰盛的( )。", o2:["晚餐", "参加"]},
+            {w:"疑惑", t:"惑", n:"或", d:"不明白。", h:"心不解。", q2:"感到( )。", o2:["疑惑", "或者"]}
         ]},
-        { name: "第六关：终极挑战", type: "ultimate", data: [
-            {w:"躲避", t:"避", n:"辟", p:"duǒ bì", d:"离开，不碰上。", h:"走之底。"},
-            {w:"惹事", t:"惹", n:"若", p:"rě shì", d:"招引麻烦。", h:"惹。"},
-            {w:"警惕", t:"惕", n:"踢", p:"jǐng tì", d:"防备危险。", h:"竖心旁。"},
-            {w:"犹豫", t:"犹豫", n:"犹", p:"yóu yù", d:"迟疑不决。", h:"反犬旁。"},
-            {w:"最终", t:"终", n:"中", p:"zuì zhōng", d:"最后。", h:"始终。"},
-            {w:"已经", t:"已", n:"己", p:"yǐ jīng", d:"动作完成。", h:"已半开。"},
-            {w:"特殊", t:"殊", n:"珠", p:"tè shū", d:"不一般。", h:"殊。"},
-            {w:"收获", t:"获", n:"惑", p:"huò", d:"得到成果。", h:"草字头。"},
-            {w:"图画", t:"图", n:"突", p:"tú huà", d:"绘画。", h:"围墙框。"},
-            {w:"始终", t:"终", n:"冬", p:"shǐ zhōng", d:"从头到尾。", h:"末端是丝。"},
-            {w:"自己", t:"己", n:"已", p:"zì jǐ", d:"指本人。", h:"己不开口。"},
-            {w:"已经", t:"已", n:"己", p:"yǐ jīng", d:"动作完成。", h:"已半开口。"},
-            {w:"疑惑", t:"惑", n:"或", p:"yí huò", d:"心里不明白。", h:"心不解。"}
+        { name: "第六关：终极挑战", data: [
+            {w:"躲避", t:"避", n:"辟", d:"不碰上。", h:"避开。", q2:"( )危险。", o2:["躲避", "开辟"]},
+            {w:"惹事", t:"惹", n:"若", d:"招麻烦。", h:"惹。", q2:"从不( )生非。", o2:["惹事", "若是"]},
+            {w:"警惕", t:"惕", n:"踢", d:"时刻防备。", h:"心。", q2:"提高( )。", o2:["警惕", "踢球"]},
+            {w:"犹豫", t:"犹", n:"尤", d:"迟疑。", h:"反犬旁。", q2:"( )了很久。", o2:["犹豫", "尤其"]},
+            {w:"最终", t:"终", n:"中", d:"最后。", h:"始终。", q2:"( )夺得金牌。", o2:["最终", "最中"]},
+            {w:"已经", t:"已", n:"己", d:"动作完成。", h:"已半开。", q2:"天( )不早了。", o2:["已经", "自己"]},
+            {w:"特殊", t:"殊", n:"珠", d:"不一般。", h:"殊。", q2:"( )原因。", o2:["特殊", "珍珠"]},
+            {w:"收获", t:"获", n:"惑", d:"得到成果。", h:"草头。", q2:"获得大( )。", o2:["收获", "困惑"]},
+            {w:"图画", t:"图", n:"突", d:"绘画。", h:"围墙框。", q2:"这张( )很美。", o2:["图画", "突然"]},
+            {w:"始终", t:"终", n:"冬", d:"从头到尾。", h:"末端丝。", q2:"( )保持谦虚。", o2:["始终", "寒冬"]},
+            {w:"自己", t:"己", n:"已", d:"本人。", h:"己不开口。", q2:"( )的事自己做。", o2:["自己", "已经"]},
+            {w:"已经", t:"已", n:"己", d:"动作完成。", h:"已半开口。", q2:"( )学会了。", o2:["已经", "自己"]},
+            {w:"疑惑", t:"惑", n:"或", d:"不明白。", h:"心不解。", q2:"满脸( )地看着。", o2:["疑惑", "或者"]}
         ]}
     ];
 
     function goToMenu() {
         userName = document.getElementById('user-name').value;
         if(!userName) return alert("请输入姓名");
-        document.getElementById('screen-login').className = "hidden";
-        document.getElementById('screen-menu').className = "";
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-menu').classList.remove('hidden');
         document.getElementById('welcome-text').innerText = `你好，${userName}！`;
         const container = document.getElementById('level-buttons');
         container.innerHTML = "";
         database.forEach((lvl, i) => {
             const b = document.createElement('button');
-            b.className = "btn";
-            b.style.width = "85%";
+            b.className = 'btn';
             b.innerText = lvl.name;
             b.onclick = () => startLevel(i);
             container.appendChild(b);
@@ -186,130 +186,109 @@
     }
 
     function startLevel(idx) {
-        currentLevelObj = database[idx];
-        activePool = JSON.parse(JSON.stringify(currentLevelObj.data));
-        score = 0; totalTried = 0;
-        document.getElementById('screen-menu').className = "hidden";
-        document.getElementById('screen-game').className = "";
-        document.getElementById('level-title').innerText = currentLevelObj.name;
-        
-        if(currentLevelObj.type === 'ultimate') {
-            document.getElementById('app').classList.add('ultimate-mode');
-            document.getElementById('timer-container').style.display = 'block';
-        } else {
-            document.getElementById('app').classList.remove('ultimate-mode');
-            document.getElementById('timer-container').style.display = 'none';
-        }
+        currentLevelData = JSON.parse(JSON.stringify(database[idx].data));
+        activePool = [...currentLevelData];
+        currentPhase = 1; totalTried = 0; score = 0;
+        document.getElementById('screen-menu').classList.add('hidden');
+        document.getElementById('screen-game').classList.remove('hidden');
+        document.getElementById('level-title').innerText = database[idx].name;
         nextQuestion();
     }
 
-    function startTimer() {
-        stopTimer();
-        timeLeft = 50; 
-        document.getElementById('timer-bar').style.width = '100%';
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer-bar').style.width = (timeLeft * 2) + '%';
-            if(timeLeft <= 0) {
-                stopTimer();
-                handleResult(false, true); // 自动判定为错（超时）
-            }
-        }, 100);
-    }
-
-    function stopTimer() {
-        if(timerInterval) clearInterval(timerInterval);
-    }
-
     function nextQuestion() {
-        if(activePool.length === 0) return finishGame();
+        if(activePool.length === 0) {
+            if(currentPhase === 1) {
+                alert("🎉 字形辨析全对！进入【语境应用战】！");
+                currentPhase = 2; activePool = [...currentLevelData];
+                nextQuestion(); return;
+            } else { return finishGame(); }
+        }
         document.getElementById('feedback').innerText = "";
+        document.getElementById('writer-container').style.display = "none";
+        document.getElementById('display-area').style.display = "block";
+        document.getElementById('opt-area').style.display = "grid";
         const r = Math.floor(Math.random() * activePool.length);
-        currentQ = activePool[r];
-        currentQ.idx = r;
+        currentQ = activePool[r]; currentQ.tIdx = r;
+        renderUI();
+    }
 
+    function renderUI() {
         const optArea = document.getElementById('opt-area');
         const sText = document.getElementById('s-text');
         const dText = document.getElementById('d-text');
-        const pText = document.getElementById('p-text');
-        optArea.innerHTML = ""; sText.innerHTML = ""; dText.innerHTML = ""; pText.innerText = "";
-
-        // 终极挑战会随机出现填空或纠错
-        let mode = currentLevelObj.type;
-        if(mode === 'ultimate') mode = Math.random() > 0.5 ? 'select' : 'fix';
-
-        if(mode === "select" || mode === "audio") {
-            pText.innerText = currentQ.p || "";
-            dText.innerHTML = `<b>提示：</b>${currentQ.d || "听音选字"}`;
-            if(mode === "audio") {
-                sText.innerHTML = `<button class="btn" onclick="speak('${currentQ.w}')">🔊 听音</button>`;
-            } else {
-                const parts = currentQ.w.split(currentQ.t);
-                sText.innerHTML = `${parts[0]}<span class="blank">?</span>${parts[1]}`;
-            }
-        } else if(mode === "fix") {
-            dText.innerHTML = `<b>意思：</b>${currentQ.d || "纠正错别字"}`;
-            const wrongWord = currentQ.w.replace(currentQ.t, currentQ.n);
-            sText.innerHTML = `纠错：<span class="error-text">${wrongWord}</span>`;
+        const tag = document.getElementById('phase-tag');
+        optArea.innerHTML = "";
+        if(currentPhase === 1) {
+            tag.innerText = "阶段一：字形辨析"; tag.style.background = "#03A9F4";
+            dText.innerHTML = `<b>提示：</b>${currentQ.d}`;
+            const parts = currentQ.w.split(currentQ.t);
+            sText.innerHTML = `${parts[0]}<span class="blank">?</span>${parts[1]}`;
+            const isF = Math.random() > 0.5;
+            renderOpt(isF ? currentQ.t : currentQ.n, isF);
+            renderOpt(isF ? currentQ.n : currentQ.t, !isF);
+        } else {
+            tag.innerText = "阶段二：语境辨析"; tag.style.background = "#E91E63";
+            dText.innerHTML = `<b>任务：</b>选出最恰当的词。`;
+            sText.innerHTML = currentQ.q2.replace("( )", "<span class='blank'>？</span>");
+            const isF = Math.random() > 0.5;
+            renderOpt(isF ? currentQ.o2[0] : currentQ.o2[1], isF);
+            renderOpt(isF ? currentQ.o2[1] : currentQ.o2[0], !isF);
         }
-
-        const isF = Math.random() > 0.5;
-        renderOpt(isF ? currentQ.t : currentQ.n, isF);
-        renderOpt(isF ? currentQ.n : currentQ.t, !isF);
-        
-        if(currentLevelObj.type === 'ultimate') startTimer();
         updateStat();
     }
 
     function renderOpt(txt, isCorrect) {
         const b = document.createElement('div');
-        b.className = "opt-card";
-        b.innerText = txt;
-        b.onclick = () => { stopTimer(); handleResult(isCorrect); };
+        b.className = "opt-card"; b.innerText = txt;
+        b.onclick = () => handleResult(isCorrect);
         document.getElementById('opt-area').appendChild(b);
     }
 
-    function handleResult(isCorrect, isTimeout = false) {
+    function handleResult(isCorrect) {
         totalTried++;
         const fb = document.getElementById('feedback');
-        const sText = document.getElementById('s-text');
-        
         if(isCorrect) {
-            fb.innerHTML = "<span style='color:var(--main)'>恭喜你，答对了！🌟</span>";
-            sText.innerHTML = `<span class="correct-text">${currentQ.w}</span>`;
-            activePool.splice(currentQ.idx, 1);
-            score++;
-            setTimeout(nextQuestion, 1200);
+            if(currentPhase === 1) initWriter(currentQ.t);
+            else {
+                fb.innerHTML = "<span style='color:var(--main)'>✔ 答对了！</span>";
+                activePool.splice(currentQ.tIdx, 1);
+                score++; setTimeout(nextQuestion, 800);
+            }
         } else {
-            fb.innerHTML = isTimeout ? "<span style='color:var(--wrong)'>⏰ 时间到！记一记："+currentQ.h+"</span>" : `<span style='color:var(--wrong)'>❌ 记一记：${currentQ.h || '再试一次'}</span>`;
-            setTimeout(nextQuestion, 3000);
+            fb.innerHTML = `<span style='color:var(--wrong)'>❌ 记一记：${currentQ.h}</span>`;
+            setTimeout(nextQuestion, 2500);
         }
-        updateStat();
     }
 
-    function speak(txt) {
-        const u = new SpeechSynthesisUtterance(txt);
-        u.lang = 'zh-CN';
-        window.speechSynthesis.speak(u);
+    function initWriter(char) {
+        document.getElementById('display-area').style.display = "none";
+        document.getElementById('opt-area').style.display = "none";
+        document.getElementById('writer-container').style.display = "flex";
+        document.getElementById('write-target').innerText = char;
+        document.getElementById('feedback').innerText = "请按笔顺书写该字";
+        document.getElementById('grid').innerHTML = "";
+        writer = HanziWriter.create('grid', char, {
+            width: 180, height: 180, showCharacter: false, padding: 5,
+            onComplete: function() {
+                document.getElementById('feedback').innerHTML = "<span style='color:var(--main)'>书写正确！🌟</span>";
+                activePool.splice(currentQ.tIdx, 1);
+                score++; setTimeout(nextQuestion, 1000);
+            }
+        });
     }
-
+    function startQuiz() { if(writer) writer.quiz(); }
     function updateStat() {
-        const total = currentLevelObj.data.length;
-        const rem = activePool.length;
+        const total = 13, rem = activePool.length;
         document.getElementById('stat-count').innerText = `剩余: ${rem}`;
-        document.getElementById('progress-fill').style.width = ((total - rem) / total * 100) + "%";
+        let base = currentPhase === 1 ? 0 : 50;
+        document.getElementById('progress-fill').style.width = (base + ((total - rem) / total * 50)) + "%";
     }
-
     function finishGame() {
-        stopTimer();
-        document.getElementById('screen-game').className = "hidden";
-        document.getElementById('screen-result').className = "";
+        document.getElementById('screen-game').classList.add('hidden');
+        document.getElementById('screen-result').classList.remove('hidden');
         document.getElementById('res-name').innerText = userName;
-        document.getElementById('res-level').innerText = currentLevelObj.name;
-        const acc = Math.round((score/totalTried)*100);
-        document.getElementById('res-acc').innerText = acc + "%";
-        document.getElementById('result-title').innerText = acc >= 90 ? "🏆 终极识字王！" : "🎉 闯关成功！";
-        document.getElementById('res-time').innerText = "完成时间：" + new Date().toLocaleString();
+        document.getElementById('res-level').innerText = document.getElementById('level-title').innerText;
+        document.getElementById('res-acc').innerText = Math.round((13 / (totalTried/2)) * 100) + "%";
     }
 </script>
 </body>
